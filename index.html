@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indian Fast Food & Cafe</title>
+
+<style>
+*{box-sizing:border-box}
+body{
+margin:0;
+font-family:Arial,sans-serif;
+background:#fff8f1;
+color:#222
+}
+header{
+background:#111;
+color:white;
+padding:18px;
+text-align:center;
+position:sticky;
+top:0;
+z-index:10
+}
+header h1{margin:0;font-size:25px}
+header p{margin:6px 0;color:#ffd21a}
+.container{
+max-width:900px;
+margin:auto;
+padding:15px 14px 100px
+}
+.offer{
+background:#111;
+color:#ffd21a;
+padding:15px;
+border-radius:15px;
+text-align:center;
+font-weight:bold;
+margin-bottom:15px
+}
+.tabs{
+display:flex;
+gap:8px;
+overflow:auto;
+margin-bottom:15px
+}
+.tabs button{
+border:0;
+padding:10px 15px;
+border-radius:20px;
+white-space:nowrap;
+font-weight:bold
+}
+.tabs button.active{
+background:#d71920;
+color:white
+}
+.menu{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(145px,1fr));
+gap:12px
+}
+.card{
+background:white;
+padding:14px;
+border-radius:16px;
+box-shadow:0 2px 10px #0002;
+text-align:center
+}
+.food{
+font-size:42px
+}
+.card h3{
+font-size:16px;
+margin:8px 0
+}
+.price{
+font-size:19px;
+font-weight:bold
+}
+.add{
+width:100%;
+border:0;
+background:#d71920;
+color:white;
+padding:10px;
+border-radius:10px;
+margin-top:9px;
+font-weight:bold
+}
+.cart{
+background:white;
+margin-top:20px;
+padding:16px;
+border-radius:16px;
+box-shadow:0 2px 10px #0002
+}
+input,textarea,select{
+width:100%;
+padding:12px;
+margin:6px 0;
+border:1px solid #ddd;
+border-radius:10px
+}
+.order{
+width:100%;
+border:0;
+background:#16a34a;
+color:white;
+padding:13px;
+border-radius:10px;
+font-size:16px;
+font-weight:bold
+}
+.bottom{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:white;
+padding:10px 15px;
+box-shadow:0 -3px 15px #0003;
+display:flex;
+justify-content:space-between;
+align-items:center;
+z-index:20
+}
+.bottom button{
+background:#16a34a;
+color:white;
+border:0;
+padding:12px 18px;
+border-radius:10px;
+font-weight:bold
+}
+.item{
+display:flex;
+justify-content:space-between;
+padding:8px 0;
+border-bottom:1px solid #eee
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1>🍔 Indian Fast Food & Cafe</h1>
+<p>📍 Bhairogange Bazar | 📞 9125428413</p>
+</header>
+
+<div class="container">
+
+<div class="offer">
+🛵 5 KM तक FREE DELIVERY
+<br>
+⚡ 15 मिनट में Delivery
+</div>
+
+<div class="tabs">
+<button class="active" onclick="show('all',this)">All</button>
+<button onclick="show('Burger',this)">🍔 Burger</button>
+<button onclick="show('Pizza',this)">🍕 Pizza</button>
+<button onclick="show('Chinese',this)">🍜 Chinese</button>
+<button onclick="show('Snacks',this)">🍟 Snacks</button>
+<button onclick="show('Drinks',this)">🥤 Drinks</button>
+</div>
+
+<div id="menu" class="menu"></div>
+
+<div class="cart">
+<h2>🛒 Your Order</h2>
+<div id="items">Cart खाली है</div>
+
+<h3>Total: ₹<span id="total">0</span></h3>
+
+<input id="name" placeholder="Customer Name">
+<input id="phone" placeholder="Mobile Number">
+<textarea id="address" placeholder="Delivery Address"></textarea>
+
+<select id="payment">
+<option>Cash on Delivery</option>
+<option>UPI Payment</option>
+</select>
+
+<button class="order" onclick="placeOrder()">
+📲 WhatsApp पर Order करें
+</button>
+</div>
+
+</div>
+
+<div class="bottom">
+<b>🛒 <span id="count">0</span> Items | ₹<span id="bottomTotal">0</span></b>
+<button onclick="document.querySelector('.cart').scrollIntoView({behavior:'smooth'})">
+View Cart
+</button>
+</div>
+
+<script>
+
+const products=[
+
+["Burger","🍔","Veg Burger",59],
+["Burger","🍔","Cheese Burger",79],
+["Burger","🍔","Double Burger",99],
+
+["Pizza","🍕","Veg Pizza",99],
+["Pizza","🍕","Cheese Pizza",129],
+["Pizza","🍕","Paneer Pizza",149],
+
+["Chinese","🍜","Veg Chowmein",79],
+["Chinese","🍜","Paneer Chowmein",99],
+["Chinese","🥟","Veg Momos",69],
+
+["Snacks","🍟","French Fries",59],
+["Snacks","🥪","Veg Sandwich",69],
+["Snacks","🌯","Paneer Roll",89],
+
+["Drinks","🥤","Cold Drink",40],
+["Drinks","☕","Cold Coffee",69],
+["Drinks","🍵","Tea",20]
+
+];
+
+let cart=[];
+
+function render(list){
+
+document.getElementById("menu").innerHTML=
+
+list.map((p,i)=>`
+
+<div class="card">
+
+<div class="food">${p[1]}</div>
+
+<h3>${p[2]}</h3>
+
+<div class="price">₹${p[3]}</div>
+
+<button class="add"
+onclick="add(${products.indexOf(p)})">
+Add to Cart
+</button>
+
+</div>
+
+`).join("");
+
+}
+
+function show(category,button){
+
+document.querySelectorAll(".tabs button")
+.forEach(b=>b.classList.remove("active"));
+
+button.classList.add("active");
+
+if(category==="all")
+render(products);
+else
+render(products.filter(p=>p[0]===category));
+
+}
+
+function add(index){
+
+cart.push(products[index]);
+
+updateCart();
+
+}
+
+function updateCart(){
+
+let total=0;
+
+if(cart.length===0){
+
+document.getElementById("items").innerHTML="Cart खाली है";
+
+}else{
+
+document.getElementById("items").innerHTML=
+
+cart.map((p,i)=>{
+
+total+=p[3];
+
+return `
+
+<div class="item">
+
+<span>${p[1]} ${p[2]}</span>
+
+<b>₹${p[3]}
+<button onclick="removeItem(${i})">×</button>
+</b>
+
+</div>
+
+`;
+
+}).join("");
+
+}
+
+document.getElementById("total").innerText=total;
+document.getElementById("bottomTotal").innerText=total;
+document.getElementById("count").innerText=cart.length;
+
+}
+
+function removeItem(index){
+
+cart.splice(index,1);
+
+updateCart();
+
+}
+
+function placeOrder(){
+
+if(cart.length===0){
+
+alert("पहले कोई item Cart में add करें");
+
+return;
+
+}
+
+let name=document.getElementById("name").value;
+let phone=document.getElementById("phone").value;
+let address=document.getElementById("address").value;
+let payment=document.getElementById("payment").value;
+
+if(!name || !phone || !address){
+
+alert("Name, Mobile और Address भरें");
+
+return;
+
+}
+
+let total=cart.reduce((sum,p)=>sum+p[3],0);
+
+let orderItems=cart.map(p=>
+"• "+p[2]+" - ₹"+p[3]
+).join("%0A");
+
+let message=
+
+"*NEW ORDER*%0A"+
+"*Indian Fast Food & Cafe*%0A%0A"+
+orderItems+
+"%0A%0A*Total: ₹"+total+"*"+
+"%0AName: "+encodeURIComponent(name)+
+"%0AMobile: "+encodeURIComponent(phone)+
+"%0AAddress: "+encodeURIComponent(address)+
+"%0APayment: "+encodeURIComponent(payment);
+
+window.location.href=
+"https://wa.me/919125428413?text="+message;
+
+}
+
+render(products);
+
+</script>
+
+</body>
+</html>
